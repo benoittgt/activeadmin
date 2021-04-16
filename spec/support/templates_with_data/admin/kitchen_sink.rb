@@ -17,7 +17,16 @@ ActiveAdmin.register_page "KitchenSink" do
   content do
     columns do
       column do
-        panel "Panel title" do
+        panel_link_with_tooltip = safe_join([
+          'Cat',
+          i(
+            title: 'This is the tooltip text',
+            class: 'ui-icon ui-icon-help panel-tooltip',
+            'data-placement': 'bottom',
+            'data-controller': 'tooltip',
+          )
+        ])
+        panel panel_link_with_tooltip do
           h1 "This is an h1"
           h2 "This is an h2"
           h3 "This is an h3"
