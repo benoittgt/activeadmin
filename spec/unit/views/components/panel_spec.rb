@@ -1,58 +1,94 @@
 require "rails_helper"
 
 RSpec.describe ActiveAdmin::Views::Panel do
-  let(:arbre_panel) do
-    render_arbre_component do
-      panel "My Title" do
-        header_action link_to("My Link", "https://www.github.com/activeadmin/activeadmin")
-        span("Hello World")
-      end
-    end
-  end
+  # around(:each) do |example|
+  #   initial_formated_output_length = RSpec::Support::ObjectFormatter.default_instance.max_formatted_output_length
+  #   RSpec::Support::ObjectFormatter.default_instance.max_formatted_output_length = 10_000
+  #   example.run
+  #   RSpec::Support::ObjectFormatter.default_instance.max_formatted_output_length = initial_formated_output_length
+  # end
 
-  let(:panel_html) { Capybara.string(arbre_panel.to_s) }
-
-  it "should have a title h3" do
-    expect(panel_html).to have_css "h3", text: "My Title"
-  end
-
-  it "should add panel actions to the panel header" do
-    link = panel_html.find("h3 > div.header_action a")
-    expect(link.text).to eq("My Link")
-    expect(link[:href]).to eq("https://www.github.com/activeadmin/activeadmin")
-  end
-
-  it "should have a contents div" do
-    expect(panel_html).to have_css "div.panel_contents"
-  end
-
-  it "should add children to the contents div" do
-    expect(panel_html).to have_css "div.panel_contents > span", text: "Hello World"
-  end
-
-  context "with html-safe title" do
-    let(:arbre_panel) do
-      title_with_html = %q[Title with <abbr>HTML</abbr>].html_safe
-      render_arbre_component do
-        panel(title_with_html)
-      end
-    end
-
-    it "should allow a html_safe title" do
-      expect(panel_html).to have_css "h3", text: "Title with HTML"
-      expect(panel_html).to have_css "h3 > abbr", text: "HTML"
-    end
-  end
-
-  describe "#children?" do
+  context 'with classic arbre_panel' do
     let(:arbre_panel) do
       render_arbre_component do
-        panel("A Panel")
+        panel 'My Title' do
+          header_action link_to("My Link", "https://www.github.com/activeadmin/activeadmin")
+          span("Hello World")
+        end
       end
     end
 
-    it "returns false if no children have been added to the panel" do
-      expect(arbre_panel.children?).to eq false
+    it "has a title h3" do
+      expect(arbre_panel.to_s).to eq <<~HTML.chomp
+        <div class="panel">
+          <h3>
+        My Title    <div class="header_action"><a href="https://www.github.com/activeadmin/activeadmin">My Link</a></div>
+          </h3>
+          <div class="panel_contents">
+            <span>Hello World</span>
+          </div>
+        </div>
+
+      HTML
+    end
+  end
+
+  context 'with arbre_panel with arbre component' do
+    let(:arbre_panel) do
+      render_arbre_component do
+        panel i(title: 'e') do
+          header_action link_to("My Link", "https://www.github.com/activeadmin/activeadmin")
+          span("Hello World")
+        end
+      end
+    end
+
+    it "should have a title h3" do
+      expect(arbre_panel.to_s).to eq <<~HTML.chomp
+        <div class="panel">
+          <h3>
+          <i title="e"></i>
+          </h3>
+          <div class="panel_contents">
+            <span>Hello World</span>
+          </div>
+        </div>
+
+      HTML
+    end
+  end
+
+  context 'with arbre_panel with arbre component' do
+    let(:arbre_panel) do
+      render_arbre_component do
+        panel_link_with_tooltip = safe_join([
+          'Panel Title',
+          i(
+            title: 'This is the tooltip text',
+            class: 'ui-icon ui-icon-help panel-tooltip',
+            'data-placement': 'bottom',
+            'data-controller': 'tooltip',
+          )
+        ])
+        panel panel_link_with_tooltip do
+          header_action link_to("My Link", "https://www.github.com/activeadmin/activeadmin")
+          span("Hello World")
+        end
+      end
+    end
+
+    it "should have a title h3" do
+      expect(arbre_panel.to_s).to eq <<~HTML.chomp
+        <div class="panel">
+          <h3>
+          Panel Title <i title="This is the tooltip text" class="ui-icon ui-icon-help panel-tooltip" data-placement="bottom" data-controller="tooltip" ></i>
+          </h3>
+          <div class="panel_contents">
+            <span>Hello World</span>
+          </div>
+        </div>
+
+      HTML
     end
   end
 end
